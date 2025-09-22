@@ -101,8 +101,11 @@ scenario = st.sidebar.selectbox(
     ]
 )
 
-# Years for analysis
-years = list(range(baseline_year + 1, baseline_year + 6))  # 5 years projection
+# Years for analysis - Updated to be future-looking (2025-2030)
+if baseline_year < 2025:
+    years = list(range(2025, 2031))  # 2025-2030 for future-looking analysis
+else:
+    years = list(range(baseline_year + 1, baseline_year + 6))  # 5 years projection
 
 # Scenario presets
 if scenario == "The Green Hero (Genuine Leader)":
@@ -267,7 +270,9 @@ with col1:
     
     # Add industry benchmark line
     benchmark_decline_rate = 0.042  # 4.2% annual decline (uniform SBTi approach)
-    benchmark_values = [baseline_emissions * (1 - benchmark_decline_rate) ** (year - baseline_year) for year in years]
+    # Calculate benchmark relative to 2025 baseline for future-looking analysis
+    benchmark_start_year = 2025 if baseline_year < 2025 else baseline_year
+    benchmark_values = [baseline_emissions * (1 - benchmark_decline_rate) ** (year - benchmark_start_year) for year in years]
     
     fig.add_trace(go.Scatter(
         name=f'{industry} Benchmark',
@@ -285,7 +290,8 @@ with col1:
         y=emissions_full,
         mode='lines+markers',
         line=dict(color='purple', width=4),
-        hovertemplate='<b>Reported Emissions</b><br>Year: %{x}<br>Emissions: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Reported Emissions</b><br>Year: %{x}<br>Emissions: %{y:.1f} MtCO₂e<extra></extra>',
+        marker=dict(size=8)
     ))
     
     fig.update_layout(
@@ -301,7 +307,13 @@ with col1:
             y=1.02,
             xanchor="right",
             x=1
-        )
+        ),
+        # Fix text overflow issues
+        margin=dict(t=100, l=50, r=50, b=50),
+        font=dict(size=12),
+        title_font=dict(size=16),
+        # Ensure proper spacing for legend
+        showlegend=True
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -353,7 +365,7 @@ with col2:
         st.metric(
             label="Total Change",
             value=f"{total_change:.1f}%",
-            delta=f"{total_change - (-21):.1f}% vs Target"  # Assuming -21% target (5 years * 4.2%)
+            delta=f"{total_change - (-21):.1f}% vs Target"  # Updated for 2025-2030 timeframe (5 years * 4.2%)
         )
     
     with col_b:
@@ -452,7 +464,9 @@ with col2:
     
     fig_pie.update_layout(
         title="Absolute Impact Distribution",
-        height=400
+        height=400,
+        margin=dict(t=50, l=20, r=20, b=20),
+        font=dict(size=12)
     )
     
     st.plotly_chart(fig_pie, use_container_width=True)
@@ -523,9 +537,9 @@ st.markdown("---")
 st.markdown("""
 **About this tool:** Based on the research framework from "Operationalizing corporate climate action through five research frontiers" - RF3: Progress Tracking. 
 This tool demonstrates how mathematical decomposition can distinguish genuine decarbonization from accounting manipulations, 
-addressing the verification crisis in corporate climate action.
+addressing the verification crisis in corporate climate action. **Timeline: 2025-2030 for future-looking analysis.**
 
 **Source:** [Research Paper](https://docs.google.com/document/d/1NcvZDqKb9h1VeNMvsexI_OG29bEjrq3pwQoYx5G5YkU/edit) | 
-**GitHub:** [Repository](https://github.com/your-username/decarbonization-detective) | 
-**Connect:** [LinkedIn](https://linkedin.com/in/your-profile)
+**GitHub:** [Repository](https://github.com/RamanaGudipudi/decarbonization-detective) | 
+**Connect:** [LinkedIn](https://linkedin.com/in/ramana-gudipudi)
 """)
