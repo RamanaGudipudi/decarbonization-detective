@@ -167,53 +167,44 @@ else:  # Custom Configuration
 # Set random seed for consistency
 np.random.seed(42)
 
-# Calculate emissions trajectory
+# Calculate emissions trajectory - Simplified for stacked bars
 def calculate_emissions_trajectory():
-    emissions = [baseline_emissions]
+    trajectory_data = []
     current_emissions = baseline_emissions
     
-    trajectory_data = []
-    
     for i, year in enumerate(years):
-        # Calculate each component
+        # Calculate each component as absolute values (MtCO₂e)
         genuine_change = current_emissions * (genuine_reductions[i] / 100)
         method_change = current_emissions * (methodological_changes[i] / 100)
         org_change = current_emissions * (organizational_changes[i] / 100)
         growth_change = current_emissions * (business_growth[i] / 100)
         
-        # Add some random uncertainty (ε)
-        uncertainty = np.random.normal(0, current_emissions * 0.02)
+        # Add some random uncertainty (ε) - consistent seed for reproducibility
+        uncertainty = np.random.normal(0, current_emissions * 0.015)
         
-        # Calculate observed change
-        observed_change = genuine_change + method_change + org_change + growth_change + uncertainty
+        # Update emissions for next year calculation
+        total_change = genuine_change + method_change + org_change + growth_change + uncertainty
+        current_emissions += total_change
         
-        # Update current emissions
-        current_emissions += observed_change
-        emissions.append(current_emissions)
-        
-        # Store decomposition data
+        # Store decomposition data for visualization
         trajectory_data.append({
             'year': year,
-            'emissions': current_emissions,
+            'current_emissions': current_emissions,
             'genuine': genuine_change,
             'methodological': method_change,
             'organizational': org_change,
             'growth': growth_change,
             'uncertainty': uncertainty,
-            'total_change': observed_change,
-            'cumulative_genuine': sum(genuine_reductions[:i+1]),
-            'cumulative_observed': ((current_emissions - baseline_emissions) / baseline_emissions) * 100
+            'net_change': total_change
         })
     
-    return emissions, trajectory_data
+    return trajectory_data
 
 # Generate data
-emissions_trajectory, decomposition_data = calculate_emissions_trajectory()
+decomposition_data = calculate_emissions_trajectory()
 
 # Create DataFrame for plotting
 df = pd.DataFrame(decomposition_data)
-years_full = [2024] + years  # Always start from 2024 baseline
-emissions_full = emissions_trajectory
 
 # Main dashboard
 col1, col2 = st.columns([2, 1])
@@ -221,16 +212,17 @@ col1, col2 = st.columns([2, 1])
 with col1:
     st.subheader(f"📈 {company_name} - Emission Analysis (2025-2030)")
     
-    # Create stacked bar chart
+    # Create simplified stacked bar chart
     fig = go.Figure()
     
-    # Add bars for each component
+    # Add bars for each component - stacked to show decomposition
     fig.add_trace(go.Bar(
         name='Genuine Decarbonization',
         x=df['year'],
         y=df['genuine'],
         marker_color='#2E7D32',  # Green
-        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<br>%{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=1
     ))
     
     fig.add_trace(go.Bar(
@@ -238,7 +230,8 @@ with col1:
         x=df['year'],
         y=df['methodological'],
         marker_color='#FF9800',  # Orange
-        hovertemplate='<b>Methodological Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Methodological Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=1
     ))
     
     fig.add_trace(go.Bar(
@@ -246,7 +239,8 @@ with col1:
         x=df['year'],
         y=df['organizational'],
         marker_color='#2196F3',  # Blue
-        hovertemplate='<b>Organizational Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Organizational Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=1
     ))
     
     fig.add_trace(go.Bar(
@@ -254,7 +248,8 @@ with col1:
         x=df['year'],
         y=df['growth'],
         marker_color='#F44336',  # Red
-        hovertemplate='<b>Business Growth</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Business Growth</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=1
     ))
     
     fig.add_trace(go.Bar(
@@ -262,63 +257,71 @@ with col1:
         x=df['year'],
         y=df['uncertainty'],
         marker_color='#9E9E9E',  # Grey
-        hovertemplate='<b>Measurement Uncertainty</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
+        hovertemplate='<b>Measurement Uncertainty</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=1
     ))
     
-    # Add industry benchmark line
-    benchmark_decline_rate = 0.042  # 4.2% annual decline (uniform SBTi approach)
-    # Calculate benchmark starting from 2025 (first projection year)
-    benchmark_values = [baseline_emissions * (1 - benchmark_decline_rate) ** (year - 2024) for year in years]
+    # Add horizontal line at zero for reference
+    fig.add_hline(y=0, line_dash="dot", line_color="white", opacity=0.7)
     
-    fig.add_trace(go.Scatter(
-        name=f'{industry} Benchmark',
+    # Add industry benchmark as separate bars for comparison
+    benchmark_decline_rate = 0.042  # 4.2% annual decline
+    benchmark_changes = []
+    for i, year in enumerate(years):
+        benchmark_change = -baseline_emissions * benchmark_decline_rate * (i + 1)  # Cumulative benchmark
+        benchmark_changes.append(benchmark_change)
+    
+    fig.add_trace(go.Bar(
+        name='Industry Benchmark',
         x=years,
-        y=benchmark_values,
-        mode='lines+markers',
-        line=dict(color='black', width=3, dash='dash'),
-        hovertemplate='<b>Industry Benchmark</b><br>Year: %{x}<br>Target: %{y:.1f} MtCO₂e<extra></extra>'
-    ))
-    
-    # Add actual emissions trajectory
-    fig.add_trace(go.Scatter(
-        name='Reported Emissions',
-        x=years_full,
-        y=emissions_full,
-        mode='lines+markers',
-        line=dict(color='purple', width=4),
-        hovertemplate='<b>Reported Emissions</b><br>Year: %{x}<br>Emissions: %{y:.1f} MtCO₂e<extra></extra>',
-        marker=dict(size=8)
+        y=benchmark_changes,
+        marker_color='rgba(0,0,0,0.3)',  # Transparent black
+        marker_line_color='black',
+        marker_line_width=2,
+        hovertemplate='<b>Industry Benchmark</b><br>Year: %{x}<br>Expected: %{y:.1f} MtCO₂e<extra></extra>',
+        offsetgroup=2,
+        width=0.3
     ))
     
     fig.update_layout(
         title=dict(
-            text=f'{company_name} - Emission Decomposition',
+            text=f'{company_name} - Annual Emission Changes (2025-2030)',
             x=0.5,
-            font=dict(size=14)
+            font=dict(size=16)
         ),
         xaxis_title='Year',
-        yaxis_title='Emission Changes (MtCO₂e)',
-        barmode='relative',
+        yaxis_title='Annual Emission Changes (MtCO₂e)',
+        barmode='group',
         hovermode='x unified',
         height=600,
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=-0.15,
+            y=-0.2,
             xanchor="center",
             x=0.5,
-            font=dict(size=10)
+            font=dict(size=11)
         ),
-        # Fix text overflow issues with more generous margins
-        margin=dict(t=80, l=60, r=30, b=120),
-        font=dict(size=11),
-        # Ensure proper spacing for legend
+        margin=dict(t=80, l=60, r=30, b=140),
+        font=dict(size=12),
         showlegend=True,
-        # Set x-axis range to show only 2025-2030
         xaxis=dict(
-            range=[2024.5, 2030.5],
-            dtick=1
-        )
+            type='category',
+            categoryorder='category ascending'
+        ),
+        # Add reference line annotation
+        annotations=[
+            dict(
+                x=2027.5,
+                y=0,
+                text="Zero line",
+                showarrow=False,
+                font=dict(size=10, color="white"),
+                bgcolor="rgba(0,0,0,0.3)",
+                bordercolor="white",
+                borderwidth=1
+            )
+        ]
     )
     
     st.plotly_chart(fig, use_container_width=True)
@@ -327,13 +330,12 @@ with col2:
     st.subheader("🚨 Credibility Assessment")
     
     # Calculate credibility metrics
-    total_genuine = sum([abs(x) for x in df['genuine']])
-    total_methodological = sum([abs(x) for x in df['methodological']])
-    total_observed_reduction = sum([x for x in df['total_change'] if x < 0])
+    total_genuine_abs = sum([abs(x) for x in df['genuine']])
+    total_methodological_abs = sum([abs(x) for x in df['methodological']])
     
     # Credibility score calculation
-    if total_methodological + total_genuine > 0:
-        credibility_ratio = total_genuine / (total_methodological + total_genuine)
+    if total_methodological_abs + total_genuine_abs > 0:
+        credibility_ratio = total_genuine_abs / (total_methodological_abs + total_genuine_abs)
         credibility_score = min(100, credibility_ratio * 100)
     else:
         credibility_score = 0
@@ -362,22 +364,28 @@ with col2:
     # Key metrics
     st.subheader("📊 Key Metrics")
     
-    final_emissions = emissions_trajectory[-1]
-    total_change = ((final_emissions - baseline_emissions) / baseline_emissions) * 100
+    # Calculate total changes over the period
+    total_genuine = sum(df['genuine'])
+    total_methodological = sum(df['methodological'])
+    total_growth = sum(df['growth'])
+    total_net_change = sum(df['net_change'])
+    
+    final_emissions = baseline_emissions + total_net_change
+    total_change_percent = (total_net_change / baseline_emissions) * 100
     
     col_a, col_b = st.columns(2)
     with col_a:
         st.metric(
-            label="Total Change",
-            value=f"{total_change:.1f}%",
-            delta=f"{total_change - (-21):.1f}% vs Target"  # Updated for 2025-2030 timeframe (5 years * 4.2%)
+            label="Net Change",
+            value=f"{total_change_percent:.1f}%",
+            delta=f"{total_change_percent + 21:.1f}% vs -21% Target"  # SBTi 2025-2030 target
         )
     
     with col_b:
         st.metric(
             label="Final Emissions",
             value=f"{final_emissions:.0f} MtCO₂e",
-            delta=f"{final_emissions - baseline_emissions:.0f} MtCO₂e"
+            delta=f"{total_net_change:.0f} MtCO₂e"
         )
     
     # Red flags
@@ -396,7 +404,7 @@ with col2:
         red_flags.append("Frequent 'convenient' methodology updates")
     
     # Check ratio of methodological vs genuine
-    if total_methodological > total_genuine and total_methodological > 0:
+    if total_methodological_abs > total_genuine_abs and total_methodological_abs > 0:
         red_flags.append("Methodological changes exceed genuine efforts")
     
     # Check for organizational timing
