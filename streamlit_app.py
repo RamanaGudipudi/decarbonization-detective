@@ -85,7 +85,7 @@ industry_benchmarks = {
 
 # Baseline configuration
 st.sidebar.subheader("📊 Baseline Configuration")
-baseline_year = st.sidebar.selectbox("Baseline Year", [2024], index=0)  # Fixed to 2024 for 2025-2030 analysis
+baseline_year = st.sidebar.selectbox("Baseline Year", [2024], index=0)
 baseline_emissions = st.sidebar.number_input("Baseline Emissions (MtCO₂e)", value=1000.0, min_value=1.0, step=10.0)
 
 # Scenario selection
@@ -103,6 +103,12 @@ scenario = st.sidebar.selectbox(
 
 # Years for analysis - Fixed to 2025-2030 for future-looking analysis
 years = list(range(2025, 2031))  # Always 2025-2030
+
+# Initialize variables
+genuine_reductions = []
+methodological_changes = []
+organizational_changes = []
+business_growth = []
 
 # Scenario presets
 if scenario == "The Green Hero (Genuine Leader)":
@@ -133,7 +139,7 @@ else:  # Custom Configuration
     st.sidebar.subheader("🎚️ Custom Parameters")
     
     # Genuine reductions
-    st.write("**Genuine Decarbonization (%/year)** - 2025 to 2030")
+    st.sidebar.write("**Genuine Decarbonization (%/year)** - 2025 to 2030")
     genuine_reductions = []
     for i, year in enumerate(years):
         genuine_reductions.append(
@@ -221,7 +227,7 @@ with col1:
         x=df['year'],
         y=df['genuine'],
         marker_color='#2E7D32',  # Green
-        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<br>%{y:.1f} MtCO₂e<extra></extra>',
+        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
         offsetgroup=1
     ))
     
@@ -268,7 +274,7 @@ with col1:
     benchmark_decline_rate = 0.042  # 4.2% annual decline
     benchmark_changes = []
     for i, year in enumerate(years):
-        benchmark_change = -baseline_emissions * benchmark_decline_rate * (i + 1)  # Cumulative benchmark
+        benchmark_change = -baseline_emissions * benchmark_decline_rate  # Annual benchmark
         benchmark_changes.append(benchmark_change)
     
     fig.add_trace(go.Bar(
@@ -373,12 +379,15 @@ with col2:
     final_emissions = baseline_emissions + total_net_change
     total_change_percent = (total_net_change / baseline_emissions) * 100
     
+    # SBTi target: 4.2% annual reduction over 6 years = ~21% total
+    sbti_target_percent = -4.2 * len(years)  # -21% for 5 years (2025-2030 is 6 data points but 5 years)
+    
     col_a, col_b = st.columns(2)
     with col_a:
         st.metric(
             label="Net Change",
             value=f"{total_change_percent:.1f}%",
-            delta=f"{total_change_percent + 21:.1f}% vs -21% Target"  # SBTi 2025-2030 target
+            delta=f"{total_change_percent - sbti_target_percent:.1f}% vs {sbti_target_percent:.1f}% Target"
         )
     
     with col_b:
@@ -509,7 +518,7 @@ with col2:
 
 with col3:
     st.write("**For Company:**")
-    if total_genuine > abs(total_methodological):
+    if abs(total_genuine) > abs(total_methodological):
         st.success("• Strong decarbonization efforts\n• Maintain transparency\n• Share best practices")
     else:
         st.warning("• Focus on genuine interventions\n• Reduce methodology changes\n• Improve verification processes")
@@ -524,7 +533,7 @@ if st.button("Generate Verification Report"):
         'Baseline_Year': baseline_year,
         'Baseline_Emissions_MtCO2e': baseline_emissions,
         'Final_Emissions_MtCO2e': final_emissions,
-        'Total_Change_Percent': total_change,
+        'Total_Change_Percent': total_change_percent,
         'Credibility_Score': credibility_score,
         'Assessment': assessment,
         'Red_Flags': len(red_flags),
