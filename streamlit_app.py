@@ -85,7 +85,7 @@ industry_benchmarks = {
 
 # Baseline configuration
 st.sidebar.subheader("📊 Baseline Configuration")
-baseline_year = st.sidebar.selectbox("Baseline Year", [2020, 2021, 2022, 2023], index=1)
+baseline_year = st.sidebar.selectbox("Baseline Year", [2024], index=0)  # Fixed to 2024 for 2025-2030 analysis
 baseline_emissions = st.sidebar.number_input("Baseline Emissions (MtCO₂e)", value=1000.0, min_value=1.0, step=10.0)
 
 # Scenario selection
@@ -101,11 +101,8 @@ scenario = st.sidebar.selectbox(
     ]
 )
 
-# Years for analysis - Updated to be future-looking (2025-2030)
-if baseline_year < 2025:
-    years = list(range(2025, 2031))  # 2025-2030 for future-looking analysis
-else:
-    years = list(range(baseline_year + 1, baseline_year + 6))  # 5 years projection
+# Years for analysis - Fixed to 2025-2030 for future-looking analysis
+years = list(range(2025, 2031))  # Always 2025-2030
 
 # Scenario presets
 if scenario == "The Green Hero (Genuine Leader)":
@@ -136,7 +133,7 @@ else:  # Custom Configuration
     st.sidebar.subheader("🎚️ Custom Parameters")
     
     # Genuine reductions
-    st.sidebar.write("**Genuine Decarbonization (%/year)**")
+    st.write("**Genuine Decarbonization (%/year)** - 2025 to 2030")
     genuine_reductions = []
     for i, year in enumerate(years):
         genuine_reductions.append(
@@ -144,7 +141,7 @@ else:  # Custom Configuration
         )
     
     # Methodological changes
-    st.sidebar.write("**Methodological Changes (%/year)**")
+    st.sidebar.write("**Methodological Changes (%/year)** - 2025 to 2030")
     methodological_changes = []
     for i, year in enumerate(years):
         methodological_changes.append(
@@ -152,7 +149,7 @@ else:  # Custom Configuration
         )
     
     # Organizational changes
-    st.sidebar.write("**Organizational Changes (%/year)**")
+    st.sidebar.write("**Organizational Changes (%/year)** - 2025 to 2030")
     organizational_changes = []
     for i, year in enumerate(years):
         organizational_changes.append(
@@ -160,7 +157,7 @@ else:  # Custom Configuration
         )
     
     # Business growth
-    st.sidebar.write("**Business Growth Impact (%/year)**")
+    st.sidebar.write("**Business Growth Impact (%/year)** - 2025 to 2030")
     business_growth = []
     for i, year in enumerate(years):
         business_growth.append(
@@ -215,14 +212,14 @@ emissions_trajectory, decomposition_data = calculate_emissions_trajectory()
 
 # Create DataFrame for plotting
 df = pd.DataFrame(decomposition_data)
-years_full = [baseline_year] + years
+years_full = [2024] + years  # Always start from 2024 baseline
 emissions_full = emissions_trajectory
 
 # Main dashboard
 col1, col2 = st.columns([2, 1])
 
 with col1:
-    st.subheader(f"📈 {company_name} - Emission Decomposition Analysis")
+    st.subheader(f"📈 {company_name} - Emission Analysis (2025-2030)")
     
     # Create stacked bar chart
     fig = go.Figure()
@@ -270,9 +267,8 @@ with col1:
     
     # Add industry benchmark line
     benchmark_decline_rate = 0.042  # 4.2% annual decline (uniform SBTi approach)
-    # Calculate benchmark relative to 2025 baseline for future-looking analysis
-    benchmark_start_year = 2025 if baseline_year < 2025 else baseline_year
-    benchmark_values = [baseline_emissions * (1 - benchmark_decline_rate) ** (year - benchmark_start_year) for year in years]
+    # Calculate benchmark starting from 2025 (first projection year)
+    benchmark_values = [baseline_emissions * (1 - benchmark_decline_rate) ** (year - 2024) for year in years]
     
     fig.add_trace(go.Scatter(
         name=f'{industry} Benchmark',
@@ -295,7 +291,11 @@ with col1:
     ))
     
     fig.update_layout(
-        title=f'Emission Changes Decomposition - {company_name}',
+        title=dict(
+            text=f'{company_name} - Emission Decomposition',
+            x=0.5,
+            font=dict(size=14)
+        ),
         xaxis_title='Year',
         yaxis_title='Emission Changes (MtCO₂e)',
         barmode='relative',
@@ -304,16 +304,21 @@ with col1:
         legend=dict(
             orientation="h",
             yanchor="bottom",
-            y=1.02,
-            xanchor="right",
-            x=1
+            y=-0.15,
+            xanchor="center",
+            x=0.5,
+            font=dict(size=10)
         ),
-        # Fix text overflow issues
-        margin=dict(t=100, l=50, r=50, b=50),
-        font=dict(size=12),
-        title_font=dict(size=16),
+        # Fix text overflow issues with more generous margins
+        margin=dict(t=80, l=60, r=30, b=120),
+        font=dict(size=11),
         # Ensure proper spacing for legend
-        showlegend=True
+        showlegend=True,
+        # Set x-axis range to show only 2025-2030
+        xaxis=dict(
+            range=[2024.5, 2030.5],
+            dtick=1
+        )
     )
     
     st.plotly_chart(fig, use_container_width=True)
