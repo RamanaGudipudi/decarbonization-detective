@@ -521,18 +521,13 @@ with col3:
 st.subheader("📥 Export Analysis")
 
 if st.button("Generate Verification Report"):
-    # Calculate summary metrics
-    final_emissions_calc = baseline_emissions + sum(df['net_change'])
-    total_change_calc = (sum(df['net_change']) / baseline_emissions) * 100
-    
     report_data = {
         'Company': company_name,
         'Industry': industry,
-        'Baseline_Year': 2024,
-        'Analysis_Period': '2025-2030',
+        'Baseline_Year': baseline_year,
         'Baseline_Emissions_MtCO2e': baseline_emissions,
-        'Final_Emissions_MtCO2e': final_emissions_calc,
-        'Total_Change_Percent': total_change_calc,
+        'Final_Emissions_MtCO2e': final_emissions,
+        'Total_Change_Percent': total_change,
         'Credibility_Score': credibility_score,
         'Assessment': assessment,
         'Red_Flags': len(red_flags),
