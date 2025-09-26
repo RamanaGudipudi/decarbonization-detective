@@ -215,14 +215,13 @@ with col1:
     # Create simplified stacked bar chart
     fig = go.Figure()
     
-    # Add bars for each component - stacked to show decomposition
+    # Add stacked bars for each component - this creates the classic stacked bar view
     fig.add_trace(go.Bar(
         name='Genuine Decarbonization',
         x=df['year'],
         y=df['genuine'],
         marker_color='#2E7D32',  # Green
-        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<br>%{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=1
+        hovertemplate='<b>Genuine Decarbonization</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     fig.add_trace(go.Bar(
@@ -230,8 +229,7 @@ with col1:
         x=df['year'],
         y=df['methodological'],
         marker_color='#FF9800',  # Orange
-        hovertemplate='<b>Methodological Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=1
+        hovertemplate='<b>Methodological Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     fig.add_trace(go.Bar(
@@ -239,8 +237,7 @@ with col1:
         x=df['year'],
         y=df['organizational'],
         marker_color='#2196F3',  # Blue
-        hovertemplate='<b>Organizational Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=1
+        hovertemplate='<b>Organizational Changes</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     fig.add_trace(go.Bar(
@@ -248,8 +245,7 @@ with col1:
         x=df['year'],
         y=df['growth'],
         marker_color='#F44336',  # Red
-        hovertemplate='<b>Business Growth</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=1
+        hovertemplate='<b>Business Growth</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     fig.add_trace(go.Bar(
@@ -257,30 +253,32 @@ with col1:
         x=df['year'],
         y=df['uncertainty'],
         marker_color='#9E9E9E',  # Grey
-        hovertemplate='<b>Measurement Uncertainty</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=1
+        hovertemplate='<b>Measurement Uncertainty</b><br>Year: %{x}<br>Change: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     # Add horizontal line at zero for reference
     fig.add_hline(y=0, line_dash="dot", line_color="white", opacity=0.7)
     
-    # Add industry benchmark as separate bars for comparison
+    # Add industry benchmark as scatter points for comparison (not bars to avoid confusion)
     benchmark_decline_rate = 0.042  # 4.2% annual decline
     benchmark_changes = []
     for i, year in enumerate(years):
-        benchmark_change = -baseline_emissions * benchmark_decline_rate * (i + 1)  # Cumulative benchmark
-        benchmark_changes.append(benchmark_change)
+        # Annual benchmark change (not cumulative)
+        annual_benchmark = -baseline_emissions * benchmark_decline_rate
+        benchmark_changes.append(annual_benchmark)
     
-    fig.add_trace(go.Bar(
+    fig.add_trace(go.Scatter(
         name='Industry Benchmark',
         x=years,
         y=benchmark_changes,
-        marker_color='rgba(0,0,0,0.3)',  # Transparent black
-        marker_line_color='black',
-        marker_line_width=2,
-        hovertemplate='<b>Industry Benchmark</b><br>Year: %{x}<br>Expected: %{y:.1f} MtCO₂e<extra></extra>',
-        offsetgroup=2,
-        width=0.3
+        mode='markers+lines',
+        marker=dict(
+            color='black',
+            size=8,
+            symbol='diamond'
+        ),
+        line=dict(color='black', width=2, dash='dash'),
+        hovertemplate='<b>Industry Benchmark</b><br>Year: %{x}<br>Expected: %{y:.1f} MtCO₂e<extra></extra>'
     ))
     
     fig.update_layout(
@@ -291,7 +289,7 @@ with col1:
         ),
         xaxis_title='Year',
         yaxis_title='Annual Emission Changes (MtCO₂e)',
-        barmode='group',
+        barmode='relative',  # This creates the stacked effect
         hovermode='x unified',
         height=600,
         legend=dict(
@@ -562,7 +560,7 @@ addressing the verification crisis in corporate climate action. **Timeline: 2025
 
 **License:** This tool is licensed under CC BY-NC 4.0 for research and educational use only. Commercial use requires permission.
 
-**Source:
+**Source:** [Research Paper] (Send request to ramana.gudipudi@gmail.com)  | 
 **GitHub:** [Repository](https://github.com/RamanaGudipudi/decarbonization-detective) | 
 **Connect:** [LinkedIn](https://linkedin.com/in/ramana-gudipudi)
 """)
