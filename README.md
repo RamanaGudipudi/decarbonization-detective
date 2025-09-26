@@ -147,13 +147,36 @@ python -m pytest tests/
 streamlit run streamlit_app.py
 ```
 
-## 📄 License
+## 📄 License & Usage
 
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+This project is licensed under the **Creative Commons Attribution-NonCommercial 4.0 International License** - see the [LICENSE](LICENSE) file for details.
+
+### ✅ **Permitted Uses:**
+- **Academic research** and educational purposes
+- **Non-profit climate initiatives** and NGO applications  
+- **Personal learning** and skill development
+- **Open source contributions** and improvements
+- **Government and regulatory** applications
+
+### ❌ **Prohibited Uses:**
+- **Commercial products or services** without permission
+- **For-profit consulting** using this methodology
+- **Corporate internal tools** for commercial advantage
+- **Revenue-generating applications** of any kind
+
+### 🤝 **Commercial Licensing**
+For commercial use, enterprise licensing, or integration into for-profit ventures, please contact **[your-email@domain.com]** for permission and licensing terms.
+
+### 🎓 **Research Citation**
+If you use this tool in academic research, please cite:
+```
+Gudipudi, R., et al. (2025). Corporate Decarbonization Detective: 
+An Interactive Tool for RF3 Progress Tracking Framework. 
+GitHub repository: https://github.com/RamanaGudipudi/decarbonization-detective
+```
 
 ## 📞 Contact & Links
 
-- **Research Paper**: [Google Docs](https://docs.google.com/document/d/1NcvZDqKb9h1VeNMvsexI_OG29bEjrq3pwQoYx5G5YkU/edit)
 - **Related Apps**: 
   - [Emission Gaming Demo](https://emission-gaming-demo.streamlit.app/)
   - [RF2 Climate Simulator](https://rf2-climate-simulator-zgkwcpx5j5qkfvdmpbn9y6.streamlit.app/)
