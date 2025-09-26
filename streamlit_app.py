@@ -104,6 +104,12 @@ scenario = st.sidebar.selectbox(
 # Years for analysis - Fixed to 2025-2030 for future-looking analysis
 years = list(range(2025, 2031))  # Always 2025-2030
 
+# Initialize default values to prevent IndexError
+default_genuine = [-5, -5, -5, -5, -5, -5]
+default_methodological = [0, 0, 0, 0, 0, 0]
+default_organizational = [0, 0, 0, 0, 0, 0]
+default_growth = [4, 4, 4, 4, 4, 4]
+
 # Scenario presets
 if scenario == "The Green Hero (Genuine Leader)":
     genuine_reductions = [-5, -8, -12, -15, -20]  # Strong genuine reductions
@@ -167,35 +173,32 @@ else:  # Custom Configuration
 # Set random seed for consistency
 np.random.seed(42)
 
-# Calculate emissions trajectory - Simplified for stacked bars
+# Calculate emissions trajectory - Fixed to show all years properly
 def calculate_emissions_trajectory():
     trajectory_data = []
-    current_emissions = baseline_emissions
     
     for i, year in enumerate(years):
-        # Calculate each component as absolute values (MtCO₂e)
-        genuine_change = current_emissions * (genuine_reductions[i] / 100)
-        method_change = current_emissions * (methodological_changes[i] / 100)
-        org_change = current_emissions * (organizational_changes[i] / 100)
-        growth_change = current_emissions * (business_growth[i] / 100)
+        # Calculate each component as percentage of baseline (not cumulative)
+        genuine_change = baseline_emissions * (genuine_reductions[i] / 100)
+        method_change = baseline_emissions * (methodological_changes[i] / 100)
+        org_change = baseline_emissions * (organizational_changes[i] / 100)
+        growth_change = baseline_emissions * (business_growth[i] / 100)
         
         # Add some random uncertainty (ε) - consistent seed for reproducibility
-        uncertainty = np.random.normal(0, current_emissions * 0.015)
+        uncertainty = np.random.normal(0, baseline_emissions * 0.015)
         
-        # Update emissions for next year calculation
-        total_change = genuine_change + method_change + org_change + growth_change + uncertainty
-        current_emissions += total_change
+        # Calculate net change for this year
+        net_change = genuine_change + method_change + org_change + growth_change + uncertainty
         
-        # Store decomposition data for visualization
+        # Store decomposition data for visualization - each year is independent
         trajectory_data.append({
             'year': year,
-            'current_emissions': current_emissions,
             'genuine': genuine_change,
             'methodological': method_change,
             'organizational': org_change,
             'growth': growth_change,
             'uncertainty': uncertainty,
-            'net_change': total_change
+            'net_change': net_change
         })
     
     return trajectory_data
