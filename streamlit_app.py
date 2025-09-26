@@ -693,7 +693,7 @@ st.markdown("""
 **Timeline:** 2025-2030 future projection analysis
 
 ---
-**🔗 Links:** [Research Paper](https://docs.google.com/document/d/1NcvZDqKb9h1VeNMvsexI_OG29bEjrq3pwQoYx5G5YkU/edit) | 
+**🔗 Links:** 
 [GitHub Repository](https://github.com/RamanaGudipudi/decarbonization-detective) | 
 [Connect on LinkedIn](https://linkedin.com/in/ramana-gudipudi)
 
